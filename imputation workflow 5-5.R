@@ -13,6 +13,7 @@ library(forecast)
 library(patchwork)
 library(lsr)
 library(cowplot)
+library(tidyverse)
 
 ### Get the data
 
@@ -39,9 +40,17 @@ dfBay<- mutate(dfBay, Month = format(dfBay[,"Date"], "%m-%Y"))
 
 ##density plots to look at peaks
 
-
+# query raw data
 Cit1 <- dfBay %>% 
-  filter(Taxa =="Citharichthys stigmaeus") %>% filter(Station %in% c("211", "214", "215"))
+  filter(Taxa =="Citharichthys stigmaeus") %>%
+  filter(Station %in% c("211", "214", "215"))
+
+# create new column with number of days between sampling date and December 25th
+Cit2 <- Cit1 %>% 
+  mutate(Year = lubridate::year(Date), Year_prior=Year-1, Ref_month="12", Ref_day="25") %>% 
+  unite("Ref_date", Year_prior:Ref_day, remove=TRUE, sep="/") %>% 
+  mutate(Ref_date=lubridate::ymd(Ref_date)) %>% 
+  mutate(Diff_days = Date - Ref_date)
 
 Citsum1<-aggregate(Count ~ Taxa + Year + Temp_surf + Station +  Julian + Latitude + Longitude +Sal_surf + Month + Date, Cit1, sum)
 
